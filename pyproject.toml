@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "polybot"
+version = "0.1.0"
+description = "Copy-trade profitable Polymarket wallets (paper or live)."
+requires-python = ">=3.10"
+dependencies = [
+    "requests>=2.31",
+    "PyYAML>=6.0",
+    "rich>=13.7",
+    "click>=8.1",
+    "python-dotenv>=1.0",
+]
+
+[project.optional-dependencies]
+live = ["py-clob-client>=0.17"]
+dev = ["pytest>=7.4"]
+
+[project.scripts]
+polybot = "polybot.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["polybot*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

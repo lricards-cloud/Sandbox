@@ -1,0 +1,96 @@
+# Polybot configuration. Copy to config.yaml and edit.
+# CLI flags override values set here.
+
+# ----------------------------------------------------------------------------
+# Trading mode
+# ----------------------------------------------------------------------------
+# paper:  simulate fills at the current market price. No keys, no real money.
+# live:   place real orders on the Polymarket CLOB. Requires keys in .env.
+mode: paper
+
+# ----------------------------------------------------------------------------
+# Wallet discovery — how to find profitable wallets to copy.
+# ----------------------------------------------------------------------------
+discovery:
+  # Seed addresses to always evaluate (e.g. wallets you already trust).
+  seed_wallets: []
+
+  # Best-effort leaderboard fetch. The schema varies; discovery falls back
+  # gracefully if the endpoint is unreachable or shaped differently.
+  leaderboard_url: "https://lb-api.polymarket.com/leaderboard"
+  leaderboard_window: "30d"     # e.g. 1d / 7d / 30d / all
+  leaderboard_metric: "pnl"     # pnl | volume
+  leaderboard_limit: 100
+
+  # Also pull top holders of the busiest active markets as candidates.
+  scan_market_holders: true
+  markets_to_scan: 20
+  holders_per_market: 20
+
+  # How much history to pull per wallet when scoring.
+  activity_lookback: 500
+
+# ----------------------------------------------------------------------------
+# Scoring — turns raw wallet stats into a single rank. Weights are relative.
+# ----------------------------------------------------------------------------
+scoring:
+  weights:
+    win_rate: 1.0
+    roi: 1.0
+    total_pnl: 1.2
+    volume: 0.6
+    recency: 0.8
+  # Minimum bars a wallet must clear to be considered "copyable".
+  min_trades: 20
+  min_volume_usdc: 1000
+  min_win_rate: 0.55
+  max_idle_days: 14          # ignore wallets that went quiet
+
+# ----------------------------------------------------------------------------
+# Copy execution & risk management.
+# ----------------------------------------------------------------------------
+copy:
+  # How many of the top-ranked wallets to actively follow.
+  follow_top_n: 7
+
+  # proportional: copy_usdc = source_usdc * scale (clamped to the caps below)
+  # fixed:        copy_usdc = fixed_usdc on every signal
+  sizing: proportional
+  scale: 0.10
+  fixed_usdc: 25
+
+  # Per-trade bounds.
+  min_trade_usdc: 5
+  max_trade_usdc: 100
+
+  # Only copy these activity sides. Usually you want both.
+  copy_buys: true
+  copy_sells: true
+
+  # Marketable-limit slippage tolerance vs. the source price (fraction).
+  max_slippage: 0.02
+
+  # Don't chase a signal older than this many seconds.
+  max_signal_age_sec: 120
+
+  # Market filters (condition_id or slug substrings). Empty = allow all.
+  market_allowlist: []
+  market_blocklist: []
+
+risk:
+  # Hard caps that pause copying when breached.
+  max_open_positions: 25
+  max_total_exposure_usdc: 1500
+  max_position_per_market_usdc: 150
+  # Stop trading for the day after this much realized loss.
+  daily_loss_limit_usdc: 300
+
+# ----------------------------------------------------------------------------
+# Monitoring loop.
+# ----------------------------------------------------------------------------
+monitor:
+  poll_interval_sec: 8       # how often to re-poll each followed wallet
+  jitter_sec: 2              # random +/- to avoid thundering herd
+
+# Local state (SQLite). Tracks discovered wallets, seen trades, copy orders.
+database: "polybot.db"

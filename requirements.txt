@@ -1,0 +1,9 @@
+requests>=2.31
+PyYAML>=6.0
+rich>=13.7
+click>=8.1
+python-dotenv>=1.0
+
+# Optional: only needed for LIVE trading (placing real orders on Polymarket CLOB).
+# Paper-trading mode works without it.
+# py-clob-client>=0.17
