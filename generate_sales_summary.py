@@ -23,7 +23,7 @@ from datetime import date
 from pathlib import Path
 
 import openpyxl
-from openpyxl.styles import Alignment, Font, PatternFill, numbers
+from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 
 
@@ -140,38 +140,66 @@ def write_xlsx(rows: list[tuple], output_path: Path) -> None:
     ws = wb.active
     ws.title = "Sheet1"
 
-    header_font = Font(bold=True)
-    header_fill = PatternFill("solid", fgColor="D9E1F2")
-    total_font = Font(bold=True)
-    currency_fmt = '#,##0.00'
-    pct_fmt = '0.00%'
+    FONT_NAME = "Book Antiqua"
+    FONT_SIZE = 11
+    CURRENCY_FMT = '"$"#,##0.00_);[Red]\\("$"#,##0.00\\)'
+    PCT_FMT = "0.00%"
+    THIN = Side(border_style="thin")
+    THIN_BORDER = Border(left=THIN, right=THIN, top=THIN, bottom=THIN)
+    # Column B has no left border in original
+    B_BORDER = Border(right=THIN, top=THIN, bottom=THIN)
+    CENTER = Alignment(horizontal="center")
+
+    def base_font(bold=False):
+        return Font(name=FONT_NAME, size=FONT_SIZE, bold=bold)
 
     for row_idx, row in enumerate(rows, start=1):
+        is_header = row_idx == 1
+        is_total = row[0] == "Total"
+
         for col_idx, value in enumerate(row, start=1):
             cell = ws.cell(row=row_idx, column=col_idx, value=value)
 
-            if row_idx == 1:
-                cell.font = header_font
-                cell.fill = header_fill
-                cell.alignment = Alignment(horizontal="center", wrap_text=True)
+            if col_idx > 8:
                 continue
 
-            is_total_row = row[0] == "Total"
-            if is_total_row:
-                cell.font = total_font
+            cell.alignment = CENTER
 
-            # Format numeric columns
-            if col_idx in (2, 3, 4, 5, 6, 7) and isinstance(value, float):
-                cell.number_format = currency_fmt
-            elif col_idx == 8 and isinstance(value, float):
-                cell.number_format = pct_fmt
+            if is_header:
+                cell.font = base_font(bold=True)
+                cell.border = THIN_BORDER
+                cell.number_format = CURRENCY_FMT if col_idx > 1 else "General"
+                continue
 
-    # Column widths
-    widths = [22, 14, 14, 14, 14, 14, 14, 12]
-    for i, w in enumerate(widths, start=1):
-        ws.column_dimensions[get_column_letter(i)].width = w
+            # Data and total rows
+            # Bold: col A always; cols D, G, H always; col B/C/E/F not bold
+            is_bold_col = col_idx in (1, 4, 7, 8)
+            cell.font = base_font(bold=is_bold_col)
 
-    # Freeze header row
+            # Borders: col B has no left border; total row only has borders on A,D,G,H
+            if is_total and col_idx not in (1, 4, 7, 8):
+                pass  # no border
+            elif col_idx == 2:
+                cell.border = B_BORDER
+            else:
+                cell.border = THIN_BORDER
+
+            # Number formats
+            if col_idx in (2, 3, 4, 5, 6, 7):
+                cell.number_format = CURRENCY_FMT
+            elif col_idx == 8:
+                cell.number_format = PCT_FMT
+
+    # Column widths matching original exactly
+    col_widths = {
+        "A": 28.0, "B": 18.5703125, "C": 16.7109375, "D": 19.0,
+        "E": 18.5703125, "F": 16.7109375, "G": 19.0, "H": 15.5703125,
+        "I": 10.0,
+    }
+    for col, width in col_widths.items():
+        ws.column_dimensions[col].width = width
+
+    ws.row_dimensions[1].height = 15.0
     ws.freeze_panes = "A2"
 
     wb.save(output_path)
