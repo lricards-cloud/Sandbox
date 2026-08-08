@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "docfiler"
+version = "0.1.0"
+description = "Files documents Zapier classified from a Google Photos album into Obsidian, from a Drive inbox handoff."
+requires-python = ">=3.10"
+dependencies = [
+    "PyYAML>=6.0",
+    "click>=8.1",
+    "rich>=13.7",
+    "google-api-python-client>=2.100",
+    "google-auth>=2.23",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.4"]
+
+[project.scripts]
+docfiler = "docfiler.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["docfiler*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

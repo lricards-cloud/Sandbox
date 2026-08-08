@@ -12,3 +12,6 @@ venv/
 .DS_Store
 *.log
 config.yaml
+docfiler.yaml
+docfiler_state.json
+service-account*.json

@@ -1,0 +1,37 @@
+# docfiler configuration. Copy to docfiler.yaml (inside this docfiler/
+# directory) and edit. This runs on the Hermes side: Zapier watches your
+# Google Photos album, classifies each new item, files a permanent copy in
+# Google Drive, and drops the same document + a metadata sidecar into a
+# "Hermes Inbox" Drive folder. docfiler polls that inbox and files the
+# second copy into your Obsidian vault. See docs/ZAPIER_SETUP.md.
+
+drive:
+  # Service-account JSON key for a Google Cloud service account that has
+  # been granted access to the "Hermes Inbox" (and "done") folders. See
+  # docs/ZAPIER_SETUP.md for how to create one.
+  credentials_file: "service-account.json"
+
+  # Drive folder IDs (the long id in a folder's URL after /folders/).
+  inbox_folder_id: ""   # "Hermes Inbox" — Zapier drops files + .json sidecars here
+  done_folder_id: ""    # processed items are moved here; leave blank to delete instead
+
+obsidian:
+  vault_path: "/path/to/your/vault"
+  filing_root: "Filing"          # notes land in <vault>/<filing_root>/<Category>/<Year>/
+  attachments_dirname: "_attachments"
+
+# Maps a document's classified type to the Obsidian folder name (and should
+# match the folder names Zapier uses when filing the Drive copy).
+categories:
+  receipt: Receipts
+  medical: Medical
+  tax: Tax
+  warranty: Warranties
+  legal: Legal
+  insurance: Insurance
+  statement: Statements
+  other: Other
+
+poll:
+  interval_sec: 120                  # how often `docfiler watch` checks the inbox
+  state_file: "docfiler_state.json"  # tracks processed Drive file IDs, dedups across restarts

@@ -1,0 +1,8 @@
+PyYAML>=6.0
+click>=8.1
+rich>=13.7
+google-api-python-client>=2.100
+google-auth>=2.23
+
+# Optional: only needed to run the test suite.
+# pytest>=7.4
